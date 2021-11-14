@@ -1,0 +1,18 @@
+CREATE PROCEDURE inserttDepartment (DeptNo integer, 
+								   DeptName varchar(20),
+								  Location varchar(20),
+								  Capacity integer)
+LANGUAGE SQL								  
+as $$
+ 
+ Insert into Department (DeptNo,DeptName,Location,Capacity) values
+ (DeptNo,DeptName, Location, Capacity)
+ $$;
+ 
+ Select * from Department;
+ 
+CALL inserttDepartment(20, 'HR', 'Pune',30);
+CALL inserttDepartment(30, 'TR', 'Pune',300);
+CALL inserttDepartment(40, 'SL', 'Pune',200);
+CALL inserttDepartment(50, 'AC', 'Pune',14);
+								  

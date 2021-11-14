@@ -1,0 +1,216 @@
+Create Database Office;
+ 
+Create Table Department (
+	DeptNo integer Not Null,
+	DeptName varchar(20) Not Null,
+	Location varchar(20) Not Null,
+	Capacity integer Not Null,
+	PRIMARY KEY (DeptNo)
+);
+
+Insert into Department Values (10, 'IT', 'Pune', 100);
+
+select * from Department;
+
+Create Table Employee(
+  EmpNo integer Not Null,
+  EmpName varchar(150) Not null,
+  Designation varchar(50) Not Null,
+  Salary integer not null, 
+  DeptNo integer Not Null,
+ Primary Key (EmpNo),	
+  	FOREIGN KEY(DeptNo) References Department(DeptNo)	
+); 
+
+Insert into Employee Values (101, 'Mahesh', 'Manager', 100000,10);
+Insert into Employee Values (102, 'Tejas', 'Manager', 100000,20);
+
+
+Insert into Employee Values (103, 'Remesh', 'Manager', 100000,30);
+Insert into Employee Values (104, 'Ram', 'Manager', 100000,40);
+Insert into Employee Values (105, 'Leena', 'Manager', 100000,50);
+Insert into Employee Values (106, 'Neeta', 'Lead', 90000,10);
+Insert into Employee Values (107, 'Shweta', 'Lead', 90000,20);
+Insert into Employee Values (108, 'Aparna', 'Lead', 90000,30);
+Insert into Employee Values (109, 'Chaitanya', 'Lead', 90000,40);
+Insert into Employee Values (110, 'Kapil', 'Lead', 90000,50);
+Insert into Employee Values (111, 'Amit', 'Engineer', 70000,10);
+Insert into Employee Values (112, 'Abhijit', 'Engineer', 70000,20);
+Insert into Employee Values (113, 'Ajit', 'Engineer', 70000,30);
+Insert into Employee Values (114, 'Mayuresh', 'Engineer', 70000,40);
+Insert into Employee Values (115, 'Nandu', 'Engineer', 70000,50);
+Insert into Employee Values (116, 'Anil', 'Programmer', 60000,10);
+Insert into Employee Values (117, 'Abhay', 'Programmer', 60000,20);
+Insert into Employee Values (118, 'Jaywant', 'Programmer', 60000,30);
+Insert into Employee Values (119, 'Anil', 'Programmer', 60000,40);
+Insert into Employee Values (120, 'Shyam', 'Programmer', 60000,50);
+
+
+select * from Employee;
+
+
+
+-- Create Role for creatign database 
+Create Role mahesh WITH LOGIN PASSWORD 'P@ssw0rd_';
+
+ALTER ROLE mahesh CREATEDB;
+
+
+-- Create FUnction Working
+
+CREATE FUNCTION GetSumSalaryByDeptNo(p_DeptNo integer) RETURNS bigint 
+language plpgsql
+AS 
+$$
+declare 
+	sum_salary bigint;
+ BEGIN
+         select sum(Salary) into sum_salary from Employee Where DeptNo = p_DeptNo;
+		 return sum_salary;
+ END;
+ $$ 
+ -- LANGUAGE plpgsql;
+ 
+ 
+ 
+ 
+ 
+ 
+ select * from  GetSumSalaryByDeptNo(10);
+     
+ 
+
+select * from Employee Where DeptNo=10;
+
+select sum(Salary) from Employee where DeptNo=10;
+select * from Employee;
+select sum(Salary) from Employee;
+
+
+create or replace function swap(
+	inout x int,
+	inout y int
+) 
+language plpgsql	
+as $$
+begin
+   select x,y into y,x;
+end; $$;
+
+select * from swap(10,20);
+
+
+
+-- Create FUnction with if condition
+
+CREATE FUNCTION GetSumSalaryByDeptNoParameter(p_DeptNo integer) RETURNS bigint 
+language plpgsql
+AS 
+$$
+declare 
+	sum_salary bigint;
+ BEGIN
+ 		if p_DeptNo <= 0 then
+		 raise 'Parameter Can not be 0';
+		end if;
+         select sum(Salary) into sum_salary from Employee Where DeptNo = p_DeptNo;
+		 return sum_salary;
+ END;
+ $$ 
+ -- LANGUAGE plpgsql;
+
+select * from GetSumSalaryByDeptNoParameter(10);
+
+
+-- Create FUnction with out parameters
+CREATE FUNCTION GetSumSalaryByDeptNoOutParameter(p_DeptNo integer, out sum_salary bigint) RETURNS bigint 
+language plpgsql
+AS 
+$$
+ 
+ BEGIN
+ 		if p_DeptNo <= 0 then
+		 raise 'Parameter Can not be 0';
+		end if;
+         select sum(Salary) into sum_salary from Employee Where DeptNo = p_DeptNo;
+		 
+ END;
+ $$ 
+ select * from GetSumSalaryByDeptNoOutParameter(10 );
+ 
+-- The Function Returning the Table
+
+Create or Replace Function Get_EmployeeView(p_DeptNo integer)
+returns table (
+	Employee_EmpNo integer, Employee_EmpName varchar(200), Employee_Designation varchar(200), Employee_Salary integer 
+	)
+Language plpgsql
+As $$
+Begin
+ return query 
+ 		select 
+			EmpNo, 
+			EmpName, 
+			Designation, 
+			Salary 
+		from 
+			Employee
+		where 
+			DeptNo = p_DeptNo;
+End; 
+$$
+
+select * from Get_EmployeeView(10);
+
+drop function Get_EmployeeView;
+
+
+-- Stored Procedure with the transaction
+Create Procedure DeptTransaction(p_DeptNo integer, p_DeptName varchar(50), p_Location varchar(50), p_Capacity integer)
+Language plpgsql
+As $$
+Begin
+	Insert into Department(DeptNo,DeptName,Location,Capacity)
+	Values(p_DeptNo, p_DeptName, p_Location, p_Capacity);
+	If p_Capacity <= 0 Then
+		RollBack;
+ 	Else
+		Commit;
+	End If;	
+End;
+$$
+
+CALL DeptTransaction(60, 'SYS', 'Pune', -90);
+
+
+Drop Procedure DeptTransaction;
+
+select * from Department;
+
+delete from Department where DeptNo=60;
+
+
+
+-- Stored Procedure with the Table Transactions
+
+Create or replace Procedure DeptEmp()
+Language plpgsql
+as $$
+Begin
+  
+  Insert into Department (DeptNo, DeptName, Location, Capacity)
+  values (60,'System', 'Pune', 10000);
+  
+  Insert into Employee  (EmpNo, EmpName, Designation, Salary, DeptNo)
+  Values (201, 'ABC', 'Manager',10000,10);
+  
+  Commit;
+End;
+$$
+
+Call DeptEmp();
+
+Drop Procedure DeptEmp;
+
+select * from Department;
+
